@@ -1,5 +1,6 @@
-using SecureLab.Api.Application.Incidents;
 using SecureLab.Api.Data.Entities;
+using SecureLab.Api.Application.Incidents;
+using SecureLab.Api.Data;
 using SecureLab.Api.Presentation.Contracts;
 
 namespace SecureLab.Api.Presentation.Endpoints;
@@ -21,12 +22,10 @@ public static class IncidentEndpoints
             .Produces<IncidentDetailsResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-        group.MapGet("/severity-summary", () => Results.Problem(
-                title: "Точку розширення ще не реалізовано",
-                detail: "Завершіть цей endpoint під час лабораторної роботи № 1.",
-                statusCode: StatusCodes.Status501NotImplemented))
+        group.MapGet("/severity-summary", GetSeveritySummaryAsync)
             .WithName("GetIncidentSeveritySummary")
-            .ProducesProblem(StatusCodes.Status501NotImplemented);
+            .Produces<IReadOnlyList<IncidentSeveritySummaryResponse>>()
+            .ProducesValidationProblem();
 
         return endpoints;
     }
@@ -52,6 +51,29 @@ public static class IncidentEndpoints
         }
 
         return Results.Ok(await queries.GetListAsync(parsedStatus, cancellationToken));
+    }
+
+    private static async Task<IResult> GetSeveritySummaryAsync(
+        string? status,
+        IncidentQueries queries,
+        CancellationToken cancellationToken)
+    {
+        IncidentStatus? parsedStatus = null;
+        if (status is not null)
+        {
+            if (!Enum.TryParse<IncidentStatus>(status, ignoreCase: true, out var candidate)
+                || !Enum.IsDefined(candidate))
+            {
+                return Results.ValidationProblem(new Dictionary<string, string[]>
+                {
+                    ["status"] = ["Допустимі значення: New, Triaged, InProgress, Resolved, Closed."]
+                });
+            }
+
+            parsedStatus = candidate;
+        }
+
+        return Results.Ok(await queries.GetSeveritySummaryAsync(parsedStatus, cancellationToken));
     }
 
     private static async Task<IResult> GetDetailsAsync(

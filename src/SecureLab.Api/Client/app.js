@@ -103,6 +103,37 @@ async function loadIncidentDetails(id) {
   }
 }
 
+const summaryButton = document.querySelector("#summary-button");
+const summaryStatusElement = document.querySelector("#summary-status");
+const summaryListElement = document.querySelector("#summary-list");
+
+async function loadSeveritySummary() {
+    summaryListElement.replaceChildren();
+    summaryStatusElement.textContent = "Завантаження…";
+
+    try {
+        const status = filterForm ? new FormData(filterForm).get("status") : "";
+        const query = status ? `?status=${encodeURIComponent(status)}` : "";
+        const summaries = await apiFetch(`/api/incidents/severity-summary${query}`);
+
+        const total = summaries.reduce((acc, item) => acc + item.count, 0);
+        if (summaries.length === 0 || total === 0) {
+            summaryStatusElement.textContent = "Даних немає.";
+            return;
+        }
+
+        summaryStatusElement.textContent = `Груп: ${summaries.length}`;
+        for (const summary of summaries) {
+            const item = document.createElement("li");
+            item.textContent = `${summary.severity}: ${summary.count}`;
+            summaryListElement.append(item);
+        }
+    } catch (error) {
+        summaryStatusElement.textContent = "Не вдалося завантажити підсумок. Спробуйте пізніше.";
+    }
+}
+
+summaryButton.addEventListener("click", loadSeveritySummary);
 filterForm.addEventListener("submit", (event) => {
   event.preventDefault();
   loadIncidents();
