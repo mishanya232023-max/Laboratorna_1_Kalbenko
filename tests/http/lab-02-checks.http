@@ -1,0 +1,4 @@
+   @api = http://localhost:5080
+
+   ### USB Ч перев≥рка встановленн€
+   GET {{api}}/api/incidents/search?q=USB
