@@ -10,11 +10,14 @@ namespace SecureLab.Api.Tests;
 public sealed class Lab02ContractTests(SecureLabApiFactory factory)
     : IClassFixture<SecureLabApiFactory>
 {
-    private readonly HttpClient _client = factory.CreateClient();
+    private static string StudyPassword =>
+        Environment.GetEnvironmentVariable("SeedUsers__Password")
+        ?? throw new InvalidOperationException("Set local SeedUsers__Password outside Git.");
 
     [Fact]
     public async Task T02_Post_WithInvalidSeverity_Returns400WithSeverityKey()
     {
+        using var client = await factory.LoginAsync("alice", StudyPassword);
         var body = new
         {
             title = $"Invalid-{Guid.NewGuid():N}",
@@ -23,7 +26,7 @@ public sealed class Lab02ContractTests(SecureLabApiFactory factory)
             occurredAtUtc = DateTimeOffset.UtcNow.AddMinutes(-10)
         };
 
-        using var response = await _client.PostAsJsonAsync("/api/incidents", body);
+        using var response = await client.PostAsJsonAsync("/api/incidents", body);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
@@ -38,6 +41,7 @@ public sealed class Lab02ContractTests(SecureLabApiFactory factory)
     [Fact]
     public async Task T03_Post_DuplicateActiveTitle_Returns409()
     {
+        using var client = await factory.LoginAsync("alice", StudyPassword);
         var title = $"Regression-{Guid.NewGuid():N}";
         var body = new
         {
@@ -49,10 +53,10 @@ public sealed class Lab02ContractTests(SecureLabApiFactory factory)
 
         try
         {
-            using var first = await _client.PostAsJsonAsync("/api/incidents", body);
+            using var first = await client.PostAsJsonAsync("/api/incidents", body);
             Assert.Equal(HttpStatusCode.Created, first.StatusCode);
 
-            using var second = await _client.PostAsJsonAsync("/api/incidents", body);
+            using var second = await client.PostAsJsonAsync("/api/incidents", body);
             Assert.Equal(HttpStatusCode.Conflict, second.StatusCode);
             Assert.Equal("application/problem+json", second.Content.Headers.ContentType?.MediaType);
 
@@ -70,17 +74,17 @@ public sealed class Lab02ContractTests(SecureLabApiFactory factory)
     [Fact]
     public async Task S02_Search_ControlInput_ReturnsEmpty_AndUsbReturnsSingle()
     {
+        using var client = factory.CreateClient();
+
         var attack = Uri.EscapeDataString("zz-no-match' OR TRUE -- ");
-        using var attackResponse = await _client.GetAsync("/api/incidents/search?q=" + attack);
+        using var attackResponse = await client.GetAsync("/api/incidents/search?q=" + attack);
         Assert.Equal(HttpStatusCode.OK, attackResponse.StatusCode);
-        var attackJson = await attackResponse.Content.ReadAsStringAsync();
-        using var attackDoc = JsonDocument.Parse(attackJson);
+        using var attackDoc = JsonDocument.Parse(await attackResponse.Content.ReadAsStringAsync());
         Assert.Equal(0, attackDoc.RootElement.GetArrayLength());
 
-        using var usbResponse = await _client.GetAsync("/api/incidents/search?q=USB");
+        using var usbResponse = await client.GetAsync("/api/incidents/search?q=USB");
         Assert.Equal(HttpStatusCode.OK, usbResponse.StatusCode);
-        var usbJson = await usbResponse.Content.ReadAsStringAsync();
-        using var usbDoc = JsonDocument.Parse(usbJson);
+        using var usbDoc = JsonDocument.Parse(await usbResponse.Content.ReadAsStringAsync());
         Assert.Equal(1, usbDoc.RootElement.GetArrayLength());
     }
 }
