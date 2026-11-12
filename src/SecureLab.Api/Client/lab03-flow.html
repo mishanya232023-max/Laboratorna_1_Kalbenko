@@ -1,0 +1,52 @@
+﻿<!doctype html>
+<html lang="uk">
+<head>
+    <meta charset="utf-8">
+    <title>ЛР 03 — повний сценарій</title>
+</head>
+<body>
+    <h1>register → login → profile → create → logout</h1>
+    <p>Стан: <strong id="state">перевірка…</strong></p>
+
+    <h2>1. Реєстрація</h2>
+    <form id="register-form">
+        <input name="userName" placeholder="userName" required>
+        <input name="email" type="email" placeholder="email" required>
+        <input name="displayName" placeholder="displayName" required>
+        <input name="password" type="password" placeholder="пароль" autocomplete="new-password" required>
+        <button type="submit">Зареєструвати</button>
+    </form>
+
+    <h2>2. Вхід</h2>
+    <form id="login-form">
+        <input name="userName" placeholder="userName" required>
+        <input name="password" type="password" placeholder="пароль" autocomplete="current-password" required>
+        <button type="submit">Увійти</button>
+    </form>
+
+    <h2>3. Профіль</h2>
+    <button id="profile-btn" type="button">Мій профіль</button>
+    <pre id="profile">—</pre>
+
+    <h2>4. Створити інцидент</h2>
+    <form id="incident-form">
+        <input name="title" placeholder="title" required>
+        <input name="description" placeholder="description" required>
+        <select name="severity">
+            <option>Low</option>
+            <option>Medium</option>
+            <option>High</option>
+            <option>Critical</option>
+        </select>
+        <input name="occurredAtUtc" type="datetime-local" required>
+        <button type="submit">Створити</button>
+    </form>
+    <pre id="created">—</pre>
+
+    <h2>5. Вихід</h2>
+    <button id="logout-btn" type="button">Вийти</button>
+
+    <pre id="log"></pre>
+    <script src="lab03-flow.js"></script>
+</body>
+</html>
