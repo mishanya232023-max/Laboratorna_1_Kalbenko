@@ -1,4 +1,4 @@
-using SecureLab.Api.Scaffolding;
+﻿using SecureLab.Api.Scaffolding;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using SecureLab.Api.Application.Incidents;
@@ -68,8 +68,11 @@ app.MapGet("/health", async (SecureLabDbContext dbContext, CancellationToken can
 app.MapIncidentEndpoints();
 app.MapLab03Identity();
 app.MapLab02Endpoints();
+app.MapLab04VulnerableUpdate();
 app.MapFallbackToFile("index.html");
 
 app.Run();
 
 public partial class Program;
+
+
