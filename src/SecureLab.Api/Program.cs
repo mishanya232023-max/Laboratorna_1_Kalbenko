@@ -53,6 +53,7 @@ app.Use(async (context, next) =>
 {
     context.Response.Headers.XContentTypeOptions = "nosniff";
     context.Response.Headers.Append("Referrer-Policy", "no-referrer");
+    context.Response.Headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none'";
     await next(context);
 });
 
