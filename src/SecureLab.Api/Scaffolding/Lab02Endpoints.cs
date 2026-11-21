@@ -137,7 +137,9 @@ public static class Lab02Endpoints
                 incident.Id, incident.Title, incident.Severity.ToString(),
                 incident.Status.ToString(), incident.OccurredAtUtc, incident.CreatedAtUtc);
             return Results.Created($"/api/incidents/{incident.Id}", response);
-        }).RequireAuthorization();
+        })
+            .RequireAuthorization()
+            .AddEndpointFilter<SecureLab.Api.Security.AntiforgeryFilter>();
     }
 }
 
