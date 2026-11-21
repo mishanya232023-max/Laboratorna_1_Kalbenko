@@ -122,15 +122,16 @@ public static class Lab03Identity
             .RequireAuthorization();
 
         app.MapGet("/api/me", GetCurrentUser).RequireAuthorization();
-
         app.MapPost("/api/auth/logout", async (SignInManager<ApplicationUser> signIn) =>
         {
             await signIn.SignOutAsync();
             return Results.NoContent();
-        });
+        })
+       .AddEndpointFilter<SecureLab.Api.Security.AntiforgeryFilter>();
     }
 
-    private static IResult GetCurrentUser(HttpContext httpContext)
+
+        private static IResult GetCurrentUser(HttpContext httpContext)
     {
         var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!Guid.TryParse(userId, out var verifiedUserId))

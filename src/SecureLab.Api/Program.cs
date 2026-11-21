@@ -5,6 +5,8 @@ using SecureLab.Api.Application.Incidents;
 using SecureLab.Api.Data;
 using SecureLab.Api.Presentation.Endpoints;
 using Microsoft.AspNetCore.Antiforgery;
+using System.Security.Claims;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -42,19 +44,23 @@ builder.Services.AddAntiforgery(o =>
     o.HeaderName = "X-CSRF-TOKEN";
     o.Cookie.Name = "securelab-af";
 });
-builder.Services.AddRateLimiter(o =>
+builder.Services.AddRateLimiter(options =>
 {
-    o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    o.AddPolicy("search", http =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: http.User.Identity?.Name
-                ?? http.Connection.RemoteIpAddress?.ToString() ?? "anon",
-            factory: _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 10,
-                Window = TimeSpan.FromSeconds(30),
-                QueueLimit = 0
-            }));
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("search", httpContext =>
+    {
+        var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var key = !string.IsNullOrEmpty(userId)
+            ? "user:" + userId
+            : "ip:" + (httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown");
+        return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 10,
+            Window = TimeSpan.FromSeconds(10),
+            QueueLimit = 0,
+            AutoReplenishment = true
+        });
+    });
 });
 var app = builder.Build();
 
@@ -89,6 +95,7 @@ if (app.Environment.IsDevelopment())
 }
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.MapGet("/api/csrf-token", (IAntiforgery antiforgery, HttpContext http) =>
     Results.Ok(new { token = antiforgery.GetAndStoreTokens(http).RequestToken }))
     .RequireAuthorization();

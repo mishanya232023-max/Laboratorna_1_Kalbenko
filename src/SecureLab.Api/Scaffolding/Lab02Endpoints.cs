@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using SecureLab.Api.Data;
 using SecureLab.Api.Data.Entities;
 using System.Security.Claims;
+using SecureLab.Api.Security;
 
 namespace SecureLab.Api.Scaffolding;
 
@@ -54,7 +55,7 @@ public static class Lab02Endpoints
                 .ToListAsync();
 
             return Results.Ok(items);
-        });
+        }).RequireRateLimiting("search");
 
         app.MapPost("/api/incidents", async (
             CreateIncidentRequest request, HttpContext httpContext,
@@ -139,7 +140,7 @@ public static class Lab02Endpoints
             return Results.Created($"/api/incidents/{incident.Id}", response);
         })
             .RequireAuthorization()
-            .AddEndpointFilter<SecureLab.Api.Security.AntiforgeryFilter>();
+            .AddEndpointFilter<AntiforgeryFilter>();
     }
 }
 

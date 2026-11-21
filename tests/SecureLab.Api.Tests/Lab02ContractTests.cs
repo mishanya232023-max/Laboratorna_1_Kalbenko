@@ -1,4 +1,4 @@
-using System.Net;
+п»їusing System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
@@ -17,11 +17,11 @@ public sealed class Lab02ContractTests(SecureLabApiFactory factory)
     [Fact]
     public async Task T02_Post_WithInvalidSeverity_Returns400WithSeverityKey()
     {
-        using var client = await factory.LoginAsync("alice", StudyPassword);
+        using var client = await factory.LoginWithCsrfAsync("alice", StudyPassword);
         var body = new
         {
             title = $"Invalid-{Guid.NewGuid():N}",
-            description = "Тест некоректної severity.",
+            description = "пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ severity.",
             severity = "7",
             occurredAtUtc = DateTimeOffset.UtcNow.AddMinutes(-10)
         };
@@ -41,12 +41,12 @@ public sealed class Lab02ContractTests(SecureLabApiFactory factory)
     [Fact]
     public async Task T03_Post_DuplicateActiveTitle_Returns409()
     {
-        using var client = await factory.LoginAsync("alice", StudyPassword);
+        using var client = await factory.LoginWithCsrfAsync("alice", StudyPassword);
         var title = $"Regression-{Guid.NewGuid():N}";
         var body = new
         {
             title,
-            description = "Тест предметного конфлікту.",
+            description = "пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.",
             severity = "Low",
             occurredAtUtc = DateTimeOffset.UtcNow.AddMinutes(-10)
         };
