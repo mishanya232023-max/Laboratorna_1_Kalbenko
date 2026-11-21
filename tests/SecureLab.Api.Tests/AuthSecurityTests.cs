@@ -1,4 +1,4 @@
-using System.Net;
+п»їusing System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -22,7 +22,7 @@ public sealed class AuthSecurityTests(SecureLabApiFactory factory)
     private static object NewIncident(string title) => new
     {
         title,
-        description = "Тест захищеного створення інциденту.",
+        description = "пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.",
         severity = "Low",
         occurredAtUtc = DateTimeOffset.UtcNow.AddMinutes(-10)
     };
@@ -69,7 +69,7 @@ public sealed class AuthSecurityTests(SecureLabApiFactory factory)
     [Fact]
     public async Task A02_Login_Then_Me_ReturnsCurrentPrincipalWithSafeFields()
     {
-        using var client = await factory.LoginAsync("alice", StudyPassword);
+        using var client = await factory.LoginWithCsrfAsync("alice", StudyPassword);
         using var response = await client.GetAsync("/api/me");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -84,7 +84,7 @@ public sealed class AuthSecurityTests(SecureLabApiFactory factory)
     [Fact]
     public async Task A03_ValidCookie_WithOtherUserHeader_DoesNotChangeMe()
     {
-        using var client = await factory.LoginAsync("alice", StudyPassword);
+        using var client = await factory.LoginWithCsrfAsync("alice", StudyPassword);
         using var request = new HttpRequestMessage(HttpMethod.Get, "/api/me");
         request.Headers.Add("X-Demo-UserId", DbSeeder.BobId.ToString());
 
@@ -99,7 +99,7 @@ public sealed class AuthSecurityTests(SecureLabApiFactory factory)
     public async Task A04_AuthenticatedCreate_WithoutOwner_UsesPrincipalAsOwner()
     {
         var title = "A04-" + Guid.NewGuid().ToString("N");
-        using var client = await factory.LoginAsync("alice", StudyPassword);
+        using var client = await factory.LoginWithCsrfAsync("alice", StudyPassword);
         try
         {
             using var response = await client.PostAsJsonAsync("/api/incidents", NewIncident(title));
@@ -113,11 +113,11 @@ public sealed class AuthSecurityTests(SecureLabApiFactory factory)
     public async Task A05_BobCreate_WithForgedOwnerAlice_OwnerStaysBob()
     {
         var title = "A05-" + Guid.NewGuid().ToString("N");
-        using var client = await factory.LoginAsync("bob", StudyPassword);
+        using var client = await factory.LoginWithCsrfAsync("bob", StudyPassword);
         var body = new
         {
             title,
-            description = "Тест підробленого власника.",
+            description = "пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.",
             severity = "Low",
             occurredAtUtc = DateTimeOffset.UtcNow.AddMinutes(-10),
             ownerUserId = DbSeeder.AliceId
@@ -134,7 +134,7 @@ public sealed class AuthSecurityTests(SecureLabApiFactory factory)
     [Fact]
     public async Task A06_Logout_ThenProtectedRequest_Returns401()
     {
-        using var client = await factory.LoginAsync("alice", StudyPassword);
+        using var client = await factory.LoginWithCsrfAsync("alice", StudyPassword);
 
         using var before = await client.GetAsync("/api/me");
         Assert.Equal(HttpStatusCode.OK, before.StatusCode);

@@ -25,16 +25,19 @@ public static class IncidentEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapPut("/{id:guid}", UpdateAsync)
-            .WithName("UpdateIncident")
-            .ProducesProblem(StatusCodes.Status404NotFound);
+     .WithName("UpdateIncident")
+     .ProducesProblem(StatusCodes.Status404NotFound)
+     .AddEndpointFilter<SecureLab.Api.Security.AntiforgeryFilter>();
 
         group.MapDelete("/{id:guid}", DeleteAsync)
             .WithName("DeleteIncident")
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .AddEndpointFilter<SecureLab.Api.Security.AntiforgeryFilter>();
 
         group.MapPost("/{id:guid}/triage", TriageAsync)
             .WithName("TriageIncident")
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .AddEndpointFilter<SecureLab.Api.Security.AntiforgeryFilter>();
 
         group.MapGet("/severity-summary", GetSeveritySummaryAsync)
             .WithName("GetIncidentSeveritySummary")

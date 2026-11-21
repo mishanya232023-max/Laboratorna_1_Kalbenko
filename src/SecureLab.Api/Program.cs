@@ -4,6 +4,9 @@ using Scalar.AspNetCore;
 using SecureLab.Api.Application.Incidents;
 using SecureLab.Api.Data;
 using SecureLab.Api.Presentation.Endpoints;
+using Microsoft.AspNetCore.Antiforgery;
+using System.Security.Claims;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -36,6 +39,29 @@ if (builder.Environment.IsDevelopment())
         });
     });
 }
+builder.Services.AddAntiforgery(o =>
+{
+    o.HeaderName = "X-CSRF-TOKEN";
+    o.Cookie.Name = "securelab-af";
+});
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("search", httpContext =>
+    {
+        var userId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var key = !string.IsNullOrEmpty(userId)
+            ? "user:" + userId
+            : "ip:" + (httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown");
+        return RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 10,
+            Window = TimeSpan.FromSeconds(10),
+            QueueLimit = 0,
+            AutoReplenishment = true
+        });
+    });
+});
 var app = builder.Build();
 
 var resetRequested = args.Contains("--reset-database", StringComparer.Ordinal);
@@ -69,6 +95,10 @@ if (app.Environment.IsDevelopment())
 }
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
+app.MapGet("/api/csrf-token", (IAntiforgery antiforgery, HttpContext http) =>
+    Results.Ok(new { token = antiforgery.GetAndStoreTokens(http).RequestToken }))
+    .RequireAuthorization();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();

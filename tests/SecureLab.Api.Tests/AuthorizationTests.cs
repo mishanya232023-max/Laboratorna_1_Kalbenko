@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -17,7 +17,7 @@ internal static class Lab04Credentials
 public sealed class AuthorizationTests(SecureLabApiFactory factory) : IClassFixture<SecureLabApiFactory>
 {
     private Task<HttpClient> LoginAsync(string userName) =>
-        factory.LoginAsync(userName, Lab04Credentials.Password);
+        factory.LoginWithCsrfAsync(userName, Lab04Credentials.Password);
 
     private static string Url(Guid id) => $"/api/incidents/{id}";
 
@@ -306,3 +306,4 @@ public sealed class AuthorizationTests(SecureLabApiFactory factory) : IClassFixt
         Assert.Contains("Внутрішня примітка", await detailsAsMorgan.Content.ReadAsStringAsync());
     }
 }
+
