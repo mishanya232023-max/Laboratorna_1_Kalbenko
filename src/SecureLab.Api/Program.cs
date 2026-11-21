@@ -36,6 +36,11 @@ if (builder.Environment.IsDevelopment())
         });
     });
 }
+builder.Services.AddAntiforgery(o =>
+{
+    o.HeaderName = "X-CSRF-TOKEN";
+    o.Cookie.Name = "securelab-af";
+});
 var app = builder.Build();
 
 var resetRequested = args.Contains("--reset-database", StringComparer.Ordinal);
